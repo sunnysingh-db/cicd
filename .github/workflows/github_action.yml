@@ -1,4 +1,3 @@
-%yaml
 name: Git hub action for databricks cicd  # Name of the GitHub Actions workflow
 
 on:  # Specifies the events that trigger the workflow
