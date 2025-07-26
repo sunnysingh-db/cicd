@@ -1,0 +1,128 @@
+# Trigger the pipeline when changes are pushed to the main branch
+trigger:
+  - main
+
+# Define the pool and specify the virtual machine image to use
+pool:
+  vmImage: ubuntu-22.04
+
+# Define variables for Databricks credentials and host URLs for staging and production environments
+variables:
+  DATABRICKS_CLIENT_ID_STAGING: "56ab6d40-3e23-4041-bc36-f74cd0c0d926" #TODO: Update service principle ID for staging
+  DATABRICKS_CLIENT_SECRET_STAGING: "dosec6bb027fa5932fd492b6a7d103c3d39d" #TODO: Update service principle ID for staging
+  DATABRICKS_HOST_STAGING: "https://adb-984752964297111.11.azuredatabricks.net" #TODO: Update staging workspace URL
+  DATABRICKS_CLIENT_ID_PROD: "56ab6d40-3e23-4041-bc36-f74cd0c0d926" #TODO: Update service principle ID for prod
+  DATABRICKS_CLIENT_SECRET_PROD: "dosec6bb027fa5932fd492b6a7d103c3d39d" #TODO: Update service principle ID for prod
+  DATABRICKS_HOST_PROD: "https://adb-984752964297111.11.azuredatabricks.net" #TODO: Update workspace URL for prod
+
+# Define the stages of the pipeline
+stages:
+  # Define the Staging stage
+  - stage: Staging
+    displayName: 'Staging'
+    jobs:
+      # Define the job for the Staging stage
+      - job: BuildJob
+        displayName: 'Staging Job'
+        steps:
+          # Checkout the repository and clean the workspace
+          - checkout: self
+            persistCredentials: true
+            clean: true
+
+          # Install the Databricks CLI
+          - task: Bash@3
+            displayName: 'Install databricks cli'
+            inputs:
+              targetType: 'inline'
+              script: |
+                curl -fsSL https://raw.githubusercontent.com/databricks/setup-cli/main/install.sh | sudo sh
+                pip install wheel
+
+          # Validate the Databricks bundle for the staging environment
+          - task: Bash@3
+            displayName: 'validate bundle'
+            inputs:
+              targetType: 'inline'
+              script: 'databricks bundle validate -t staging' #Ensure target name is same as mentioned in databricks.yml
+            env:
+              DATABRICKS_CLIENT_ID: $(DATABRICKS_CLIENT_ID_STAGING)
+              DATABRICKS_CLIENT_SECRET: $(DATABRICKS_CLIENT_SECRET_STAGING)
+              DATABRICKS_HOST: $(DATABRICKS_HOST_STAGING)
+
+          # Deploy the Databricks bundle to the staging environment
+          - task: Bash@3
+            displayName: 'deploy bundle'
+            inputs:
+              targetType: 'inline'
+              script: 'databricks bundle deploy -t staging'#Ensure target name is same as mentioned in databricks.yml
+            env:
+              DATABRICKS_CLIENT_ID: $(DATABRICKS_CLIENT_ID_STAGING)
+              DATABRICKS_CLIENT_SECRET: $(DATABRICKS_CLIENT_SECRET_STAGING)
+              DATABRICKS_HOST: $(DATABRICKS_HOST_STAGING)
+
+          # Run the Databricks bundle in the staging environment
+          - task: Bash@3
+            displayName: 'run bundle'
+            inputs:
+              targetType: 'inline'
+              script: 'databricks bundle run -t staging'#Ensure target name is same as mentioned in databricks.yml
+            env:
+              DATABRICKS_CLIENT_ID: $(DATABRICKS_CLIENT_ID_STAGING)
+              DATABRICKS_CLIENT_SECRET: $(DATABRICKS_CLIENT_SECRET_STAGING)
+              DATABRICKS_HOST: $(DATABRICKS_HOST_STAGING)
+
+  # Define the Production stage
+  - stage: Production
+    displayName: 'Production'
+    jobs:
+      # Define the job for the Production stage
+      - job: BuildJob
+        displayName: 'Production Job'
+        steps:
+          # Checkout the repository and clean the workspace
+          - checkout: self
+            persistCredentials: true
+            clean: true
+
+          # Install the Databricks CLI
+          - task: Bash@3
+            displayName: 'Install databricks cli'
+            inputs:
+              targetType: 'inline'
+              script: |
+                curl -fsSL https://raw.githubusercontent.com/databricks/setup-cli/main/install.sh | sudo sh
+                pip install wheel
+
+          # Validate the Databricks bundle for the production environment
+          - task: Bash@3
+            displayName: 'validate bundle'
+            inputs:
+              targetType: 'inline'
+              script: 'databricks bundle validate -t prod'#Ensure target name is same as mentioned in databricks.yml
+            env:
+              DATABRICKS_CLIENT_ID: $(DATABRICKS_CLIENT_ID_PROD)
+              DATABRICKS_CLIENT_SECRET: $(DATABRICKS_CLIENT_SECRET_PROD)
+              DATABRICKS_HOST: $(DATABRICKS_HOST_PROD)
+
+          # Deploy the Databricks bundle to the production environment
+          - task: Bash@3
+            displayName: 'deploy bundle'
+            inputs:
+              targetType: 'inline'
+              script: 'databricks bundle deploy -t prod'#Ensure target name is same as mentioned in databricks.yml
+            env:
+              DATABRICKS_CLIENT_ID: $(DATABRICKS_CLIENT_ID_PROD)
+              DATABRICKS_CLIENT_SECRET: $(DATABRICKS_CLIENT_SECRET_PROD)
+              DATABRICKS_HOST: $(DATABRICKS_HOST_PROD)
+
+          # Run the Databricks bundle in the production environment
+          - task: Bash@3
+            displayName: 'run bundle'
+            inputs:
+              targetType: 'inline'
+              script: 'databricks bundle run -t prod'#Ensure target name is same as mentioned in databricks.yml
+            env:
+              DATABRICKS_CLIENT_ID: $(DATABRICKS_CLIENT_ID_PROD)
+              DATABRICKS_CLIENT_SECRET: $(DATABRICKS_CLIENT_SECRET_PROD)
+              DATABRICKS_HOST: $(DATABRICKS_HOST_PROD)
