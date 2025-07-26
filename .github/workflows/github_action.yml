@@ -6,9 +6,9 @@ on:  # Specifies the events that trigger the workflow
       - 'main'  # Only trigger on pushes to the 'main' branch
   workflow_dispatch:  # Allows the workflow to be manually triggered
 
-defaults:
-  run:
-    working-directory: ./files  # Set the default working directory for all run steps
+# defaults:
+#   run:
+#     working-directory: ./files  # Set the default working directory for all run steps
 
 env:  # Define environment variables for Databricks credentials and host URLs
   DATABRICKS_CLIENT_ID_STAGING: "56ab6d40-3e23-4041-bc36-f74cd0c0d926" #TODO: Update Service Principal ID for staging 
