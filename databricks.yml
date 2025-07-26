@@ -1,0 +1,107 @@
+# Filename: databricks.yml
+
+# Define the bundle name for the MLOps project
+bundle:
+  name: mlops
+
+# Define common permissions to be reused across the configuration
+common_permissions: &permissions
+  permissions:
+    - level: CAN_VIEW
+      group_name: users
+
+# Define variables to be used within the configuration
+variables:
+  # Prefix for job and task names
+  job_prefix:
+    description: A unifying prefix for this bundle's job and task names.
+    default: mlops
+  # Cluster configuration for jobs
+  cluster_config:
+    description: Cluster configuration for jobs
+    type: complex
+    default:
+      spark_version: 13.3.x-scala2.12
+      node_type_id: Standard_DS3_v2
+      num_workers: 1
+      spark_env_vars:
+        WORKSPACEBUNDLEPATH: ${workspace.root_path}
+  # Service principal for staging environment
+  service_principal_staging:
+    description: service principal that will be used to trigger jobs.
+    default: 56ab6d40-3e23-4041-bc36-f74cd0c0d926 #TODO: Update service principal ID for staging
+  # Service principal for production environment
+  service_principal_prod:
+    description: service principal that will be used to trigger jobs.
+    default: 56ab6d40-3e23-4041-bc36-f74cd0c0d926 #TODO: Update service principal ID for prod
+
+# Define resources such as jobs and their tasks
+resources:
+  jobs:
+    run-unit-tests:
+      # Name of the job
+      name: ${var.job_prefix}-mlops
+      tasks:
+        # Task for feature engineering
+        - task_key: ${var.job_prefix}-feature-engineering
+          # Uncomment and configure the cluster if needed
+          # new_cluster: ${var.cluster_config}
+          notebook_task:
+            notebook_path: ./notebooks/feature-engineering.ipynb
+            source: WORKSPACE
+        # Task for model training
+        - task_key: ${var.job_prefix}-training
+          depends_on:
+            - task_key: ${var.job_prefix}-feature-engineering
+          # Uncomment and configure the cluster if needed
+          # new_cluster: ${var.cluster_config}
+          notebook_task:
+            notebook_path: ./notebooks/training.ipynb
+            source: WORKSPACE
+        # Task for testing and evaluation
+        - task_key: ${var.job_prefix}-test-and-eval
+          depends_on:
+            - task_key: ${var.job_prefix}-training
+          # Uncomment and configure the cluster if needed
+          # new_cluster: ${var.cluster_config}
+          notebook_task:
+            notebook_path: ./notebooks/test-and-eval.ipynb
+            source: WORKSPACE
+        # Task for deployment
+        - task_key: ${var.job_prefix}-deploy
+          depends_on:
+            - task_key: ${var.job_prefix}-test-and-eval
+          # Uncomment and configure the cluster if needed
+          # new_cluster: ${var.cluster_config}
+          notebook_task:
+            notebook_path: ./notebooks/deploy.ipynb
+            base_parameters:
+              env: ${bundle.target} #TODO: Match the notebook dbutils widget name here
+            source: WORKSPACE
+        # Task for batch inference monitoring
+        - task_key: ${var.job_prefix}-batch-inference-monitor
+          depends_on:
+            - task_key: ${var.job_prefix}-deploy
+          # Uncomment and configure the cluster if needed
+          # new_cluster: ${var.cluster_config}
+          notebook_task:
+            notebook_path: ./notebooks/batch-inference-monitor.ipynb
+            source: WORKSPACE            
+
+# Define targets for different environments
+targets:
+  # Configuration for the staging environment
+  staging:
+    workspace:
+      host: https://adb-984752964297111.11.azuredatabricks.net #TODO: Update staging workspace URL
+      root_path: /Users/${var.service_principal_staging}/.bundle/${bundle.name}/${bundle.target}_2
+    run_as:
+      service_principal_name: ${var.service_principal_staging}
+
+  # Configuration for the production environment
+  prod:
+    workspace:
+      host: https://adb-984752964297111.11.azuredatabricks.net #TODO: Update prod workspace URL
+      root_path: /Users/${var.service_principal_prod}/.bundle/${bundle.name}/${bundle.target}_2
+    run_as:
+      service_principal_name: ${var.service_principal_prod}

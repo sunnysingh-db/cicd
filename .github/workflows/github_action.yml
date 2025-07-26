@@ -1,0 +1,87 @@
+%yaml
+name: Git hub action for databricks cicd  # Name of the GitHub Actions workflow
+
+on:  # Specifies the events that trigger the workflow
+  push:  # Trigger the workflow on push events
+    branches:
+      - 'main'  # Only trigger on pushes to the 'main' branch
+  workflow_dispatch:  # Allows the workflow to be manually triggered
+
+defaults:
+  run:
+    working-directory: ./files  # Set the default working directory for all run steps
+
+env:  # Define environment variables for Databricks credentials and host URLs
+  DATABRICKS_CLIENT_ID_STAGING: "56ab6d40-3e23-4041-bc36-f74cd0c0d926" #TODO: Update Service Principal ID for staging 
+  DATABRICKS_CLIENT_SECRET_STAGING: "dosec6bb027fa5932fd492b6a7d103c3d39d" #TODO:  Service Principal secret for staging 
+  DATABRICKS_HOST_STAGING: "https://adb-984752964297111.11.azuredatabricks.net" #TODO:  Host URL for staging environment
+  DATABRICKS_CLIENT_ID_PROD: "56ab6d40-3e23-4041-bc36-f74cd0c0d926" #TODO:  Service Principal ID for production environment
+  DATABRICKS_CLIENT_SECRET_PROD: "dosec6bb027fa5932fd492b6a7d103c3d39d" #TODO: Service Principal  secret for production
+  DATABRICKS_HOST_PROD: "https://adb-984752964297111.11.azuredatabricks.net" #TODO: Host URL for production environment
+
+jobs:  # Define the jobs to be run in the workflow
+  dev:  # Job for the development environment
+    runs-on: ubuntu-latest  # Specify the runner environment
+    steps:  # Define the steps to be executed in the job
+      - uses: actions/checkout@v4  # Check out the repository code
+      - uses: databricks/setup-cli@v0.258.0  # Set up the Databricks CLI
+      - name: Validate Bundle For dev  # Step to validate the bundle for development
+        id: validate_bundle  # ID for the step
+        env:  # Environment variables for the step
+          DATABRICKS_CLIENT_ID: ${{ env.DATABRICKS_CLIENT_ID_STAGING }}  # Use staging client ID
+          DATABRICKS_CLIENT_SECRET: ${{ env.DATABRICKS_CLIENT_SECRET_STAGING }}  # Use staging client secret
+          DATABRICKS_HOST: ${{ env.DATABRICKS_HOST_STAGING }}  # Use staging host URL
+        #Ensure target name is same as mentioned in databricks.yml
+        run: |
+          databricks bundle validate -t dev    
+      - name: Deploy Bundle to dev  # Step to deploy the bundle to development
+        id: deploy_bundle  # ID for the step
+        env:  # Environment variables for the step
+          DATABRICKS_CLIENT_ID: ${{ env.DATABRICKS_CLIENT_ID_STAGING }}  # Use staging client ID
+          DATABRICKS_CLIENT_SECRET: ${{ env.DATABRICKS_CLIENT_SECRET_STAGING }}  # Use staging client secret
+          DATABRICKS_HOST: ${{ env.DATABRICKS_HOST_STAGING }}  # Use staging host URL
+        #Ensure target name is same as mentioned in databricks.yml
+        run: |
+          databricks bundle deploy -t dev
+      - name: Run Bundle on dev  # Step to run the bundle on development
+        id: run_bundle  # ID for the step
+        env:  # Environment variables for the step
+          DATABRICKS_CLIENT_ID: ${{ env.DATABRICKS_CLIENT_ID_STAGING }}  # Use staging client ID
+          DATABRICKS_CLIENT_SECRET: ${{ env.DATABRICKS_CLIENT_SECRET_STAGING }}  # Use staging client secret
+          DATABRICKS_HOST: ${{ env.DATABRICKS_HOST_STAGING }}  # Use staging host URL
+        #Ensure target name is same as mentioned in databricks.yml
+        run: |
+          databricks bundle run -t dev 
+  prod:  # Job for the production environment
+    needs: dev  # This job depends on the successful completion of the 'dev' job
+    runs-on: ubuntu-latest  # Specify the runner environment
+    steps:  # Define the steps to be executed in the job
+      - uses: actions/checkout@v4  # Check out the repository code
+      - uses: databricks/setup-cli@v0.258.0  # Set up the Databricks CLI
+      - name: Validate Bundle For prod  # Step to validate the bundle for production
+        id: validate_bundle  # ID for the step
+        env:  # Environment variables for the step
+          DATABRICKS_CLIENT_ID: ${{ env.DATABRICKS_CLIENT_ID_PROD }}  # Use production client ID
+          DATABRICKS_CLIENT_SECRET: ${{ env.DATABRICKS_CLIENT_SECRET_PROD }}  # Use production client secret
+          DATABRICKS_HOST: ${{ env.DATABRICKS_HOST_PROD }}  # Use production host URL
+        #Ensure target name is same as mentioned in databricks.yml
+        run: |
+          databricks bundle validate -t prod
+      - name: Deploy Bundle to prod  # Step to deploy the bundle to production
+        id: deploy_bundle  # ID for the step
+        env:  # Environment variables for the step
+          DATABRICKS_CLIENT_ID: ${{ env.DATABRICKS_CLIENT_ID_PROD }}  # Use production client ID
+          DATABRICKS_CLIENT_SECRET: ${{ env.DATABRICKS_CLIENT_SECRET_PROD }}  # Use production client secret
+          DATABRICKS_HOST: ${{ env.DATABRICKS_HOST_PROD }}  # Use production host URL
+        #Ensure target name is same as mentioned in databricks.yml
+        run: |
+          databricks bundle deploy -t prod
+      - name: Run Bundle on prod  # Step to run the bundle on production
+        id: run_bundle  # ID for the step
+        env:  # Environment variables for the step
+          DATABRICKS_CLIENT_ID: ${{ env.DATABRICKS_CLIENT_ID_PROD }}  # Use production client ID
+          DATABRICKS_CLIENT_SECRET: ${{ env.DATABRICKS_CLIENT_SECRET_PROD }}  # Use production client secret
+          DATABRICKS_HOST: ${{ env.DATABRICKS_HOST_PROD }}  # Use production host URL
+        #Ensure target name is same as mentioned in databricks.yml
+        run: |
+          databricks bundle run -t prod
