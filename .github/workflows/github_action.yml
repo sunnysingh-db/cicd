@@ -19,12 +19,12 @@ env:  # Define environment variables for Databricks credentials and host URLs
   DATABRICKS_HOST_PROD: "https://adb-984752964297111.11.azuredatabricks.net" #TODO: Host URL for production environment
 
 jobs:  # Define the jobs to be run in the workflow
-  dev:  # Job for the development environment
+  staging:  # Job for the development environment
     runs-on: ubuntu-latest  # Specify the runner environment
     steps:  # Define the steps to be executed in the job
       - uses: actions/checkout@v4  # Check out the repository code
       - uses: databricks/setup-cli@v0.258.0  # Set up the Databricks CLI
-      - name: Validate Bundle For dev  # Step to validate the bundle for development
+      - name: Validate Bundle For staging  # Step to validate the bundle for development
         id: validate_bundle  # ID for the step
         env:  # Environment variables for the step
           DATABRICKS_CLIENT_ID: ${{ env.DATABRICKS_CLIENT_ID_STAGING }}  # Use staging client ID
@@ -32,8 +32,8 @@ jobs:  # Define the jobs to be run in the workflow
           DATABRICKS_HOST: ${{ env.DATABRICKS_HOST_STAGING }}  # Use staging host URL
         #Ensure target name is same as mentioned in databricks.yml
         run: |
-          databricks bundle validate -t dev    
-      - name: Deploy Bundle to dev  # Step to deploy the bundle to development
+          databricks bundle validate -t staging    
+      - name: Deploy Bundle to staging  # Step to deploy the bundle to development
         id: deploy_bundle  # ID for the step
         env:  # Environment variables for the step
           DATABRICKS_CLIENT_ID: ${{ env.DATABRICKS_CLIENT_ID_STAGING }}  # Use staging client ID
@@ -41,8 +41,8 @@ jobs:  # Define the jobs to be run in the workflow
           DATABRICKS_HOST: ${{ env.DATABRICKS_HOST_STAGING }}  # Use staging host URL
         #Ensure target name is same as mentioned in databricks.yml
         run: |
-          databricks bundle deploy -t dev
-      - name: Run Bundle on dev  # Step to run the bundle on development
+          databricks bundle deploy -t staging
+      - name: Run Bundle on staging  # Step to run the bundle on development
         id: run_bundle  # ID for the step
         env:  # Environment variables for the step
           DATABRICKS_CLIENT_ID: ${{ env.DATABRICKS_CLIENT_ID_STAGING }}  # Use staging client ID
@@ -50,9 +50,9 @@ jobs:  # Define the jobs to be run in the workflow
           DATABRICKS_HOST: ${{ env.DATABRICKS_HOST_STAGING }}  # Use staging host URL
         #Ensure target name is same as mentioned in databricks.yml
         run: |
-          databricks bundle run -t dev 
+          databricks bundle run -t staging 
   prod:  # Job for the production environment
-    needs: dev  # This job depends on the successful completion of the 'dev' job
+    needs: staging  # This job depends on the successful completion of the 'dev' job
     runs-on: ubuntu-latest  # Specify the runner environment
     steps:  # Define the steps to be executed in the job
       - uses: actions/checkout@v4  # Check out the repository code
