@@ -8,11 +8,11 @@ pool:
 
 # Define variables for Databricks credentials and host URLs for staging and production environments
 variables:
-  DATABRICKS_CLIENT_ID_STAGING: "56ab6d40-3e23-4041-bc36-f74cd0c0d926" #TODO: Update service principle ID for staging
-  DATABRICKS_CLIENT_SECRET_STAGING: "dosec6bb027fa5932fd492b6a7d103c3d39d" #TODO: Update service principle ID for staging
+  DATABRICKS_CLIENT_ID_STAGING: "<SERVICE_PRINCIPLE>" #TODO: Update service principle ID for staging
+  DATABRICKS_CLIENT_SECRET_STAGING: "<TOKEN>" #TODO: Update service principle ID for staging
   DATABRICKS_HOST_STAGING: "https://adb-984752964297111.11.azuredatabricks.net" #TODO: Update staging workspace URL
-  DATABRICKS_CLIENT_ID_PROD: "56ab6d40-3e23-4041-bc36-f74cd0c0d926" #TODO: Update service principle ID for prod
-  DATABRICKS_CLIENT_SECRET_PROD: "dosec6bb027fa5932fd492b6a7d103c3d39d" #TODO: Update service principle ID for prod
+  DATABRICKS_CLIENT_ID_PROD: "<SERVICE_PRINCIPLE>" #TODO: Update service principle ID for prod
+  DATABRICKS_CLIENT_SECRET_PROD: "<TOKEN>" #TODO: Update service principle ID for prod
   DATABRICKS_HOST_PROD: "https://adb-984752964297111.11.azuredatabricks.net" #TODO: Update workspace URL for prod
 
 # Define the stages of the pipeline

@@ -11,11 +11,11 @@ on:  # Specifies the events that trigger the workflow
 #     working-directory: ./files  # Set the default working directory for all run steps
 
 env:  # Define environment variables for Databricks credentials and host URLs
-  DATABRICKS_CLIENT_ID_STAGING: "56ab6d40-3e23-4041-bc36-f74cd0c0d926" #TODO: Update Service Principal ID for staging 
-  DATABRICKS_CLIENT_SECRET_STAGING: "dosec6bb027fa5932fd492b6a7d103c3d39d" #TODO:  Service Principal secret for staging 
+  DATABRICKS_CLIENT_ID_STAGING: "<SERVICE_PRINCIPLE>" #TODO: Update Service Principal ID for staging 
+  DATABRICKS_CLIENT_SECRET_STAGING: "<TOKEN>" #TODO:  Service Principal secret for staging 
   DATABRICKS_HOST_STAGING: "https://adb-984752964297111.11.azuredatabricks.net" #TODO:  Host URL for staging environment
-  DATABRICKS_CLIENT_ID_PROD: "56ab6d40-3e23-4041-bc36-f74cd0c0d926" #TODO:  Service Principal ID for production environment
-  DATABRICKS_CLIENT_SECRET_PROD: "dosec6bb027fa5932fd492b6a7d103c3d39d" #TODO: Service Principal  secret for production
+  DATABRICKS_CLIENT_ID_PROD: "<SERVICE_PRINCIPLE>" #TODO:  Service Principal ID for production environment
+  DATABRICKS_CLIENT_SECRET_PROD: "<TOKEN>" #TODO: Service Principal  secret for production
   DATABRICKS_HOST_PROD: "https://adb-984752964297111.11.azuredatabricks.net" #TODO: Host URL for production environment
 
 jobs:  # Define the jobs to be run in the workflow
